@@ -1,5 +1,32 @@
 import { Response, Request } from "express"
 import {users} from "./data"
+import jwt from "jsonwebtoken";
+import {AuthRequest} from "./authMiddleware"
+
+// login
+const login = (req: Request, res: Response) => {
+    const {name} = req.body;
+
+    const user = users.find(u => u.name === name);
+
+    if(!user) return res.status(404).json({message: "User not found"});
+    
+    const token = jwt.sign(
+        {id: user.id, name: user.name},
+        process.env.JWT_SECRET as string,
+        {expiresIn: "50s"}
+    );
+
+    res.json({token})
+}
+// get /profile
+const profile = (req: AuthRequest, res: Response) => {
+    try{
+        res.json({user: req.user});
+    }catch(err){
+        res.status(500).json({message: "Something went wrong"});
+    }
+}
 
 // get users/
 const getUsers = (req: Request, res: Response) => {
@@ -65,4 +92,6 @@ export default {
     createUser,
     deleteUser,
     updateUser,
+    login,
+    profile,
 }
